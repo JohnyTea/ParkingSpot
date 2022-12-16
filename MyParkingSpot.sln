@@ -3,7 +3,11 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 17
 VisualStudioVersion = 17.2.32616.157
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ParkingSpot", "ParkingSpot\ParkingSpot.csproj", "{9F1A7D71-19E5-4A1D-9257-7CD40B0DCF4F}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "MyParkingSpot.Api", "ParkingSpot\MyParkingSpot.Api.csproj", "{9F1A7D71-19E5-4A1D-9257-7CD40B0DCF4F}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "src", "src", "{3E460DAF-A1CD-4538-9B23-4600F0004C89}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "tests", "tests", "{7CC8B117-2CBD-41EA-80B7-497599D59F38}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -18,6 +22,9 @@ Global
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(NestedProjects) = preSolution
+		{9F1A7D71-19E5-4A1D-9257-7CD40B0DCF4F} = {3E460DAF-A1CD-4538-9B23-4600F0004C89}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {B4E2586D-24A4-4605-8F5B-06E93D58A9C1}

@@ -1,0 +1,31 @@
+@url = http://localhost:5000
+@reservationID = "3f515b56-20a9-4f97-b914-885b98cfe633"
+
+###
+GET {{url}}/ping
+
+###
+GET {{url}}/reservations
+
+###
+GET {{url}}/reservations/{"3f515b56-20a9-4f97-b914-885b98cfe633"}
+
+###
+POST {{url}}/reservations
+Content-Type: application/json
+
+{
+    
+    "ParkingSpotCode": "01",
+    "OwnerID": "00000000-0000-0000-0000-000000000000",
+    "DateOfReservation": "2022-12-17"
+}
+
+###
+Put {{url}}/reservations/{{reservationID}}
+Content-Type: application/json
+
+{
+    "LicencePlate": "aaa",
+    "ParkingSpotName": "p2"
+}
