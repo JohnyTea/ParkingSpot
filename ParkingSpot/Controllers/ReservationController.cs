@@ -60,6 +60,10 @@ public class ReservationsController : ControllerBase
         {
             return BadRequest(e.Message);
         }
+        catch (ArgumentException e)
+        {
+            return BadRequest(e.Message);
+        }
         catch (ObjectAlreadyReservedException e)
         {
             return BadRequest(e.Message);

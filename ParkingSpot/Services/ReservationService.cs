@@ -41,6 +41,11 @@ public class ParkingSpotReservationService
             throw new ArgumentException("Date can't be from past");
         }
 
+        if (!IsDateInCurrentWeek(reservation.Date))
+        {
+            throw new ArgumentException("Date must be from current week");
+        }
+
         ParkingSpot parkingSpotToReserve = reservation.ReservableObject as ParkingSpot;
 
         if (_parkingSpotNames.All(p => parkingSpotToReserve.Code != p.Code))
@@ -101,6 +106,13 @@ public class ParkingSpotReservationService
     {
         var reservation = _reservations.SingleOrDefault(r => r.Id == id);
         _reservations.Remove(reservation);
+    }
+
+    private static bool IsDateInCurrentWeek(DateTime date)
+    {
+        var weekToCheck = ISOWeek.GetWeekOfYear(date);
+        var currentWeek = ISOWeek.GetWeekOfYear(DateTime.Today);
+        return weekToCheck == currentWeek;
     }
 }
 
