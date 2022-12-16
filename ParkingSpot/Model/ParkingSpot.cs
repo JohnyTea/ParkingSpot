@@ -4,14 +4,8 @@ namespace MyParkingSpot.Api.Model
 {
     public class ParkingSpot : IReservable
     {
-        public Guid Id { get; }
-        public string Code { get; }
-
-        public ParkingSpot(Guid id, string code)
-        {
-            Id = id;
-            Code = code;
-        }
+        public Guid Id { get; init; }
+        public string Code { get; private set; }
 
         public ParkingSpot(string code)
         {

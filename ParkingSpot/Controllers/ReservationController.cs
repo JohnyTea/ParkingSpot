@@ -1,4 +1,5 @@
 ﻿using Microsoft.AspNetCore.Mvc;
+using MyParkingSpot.Api.Controllers.Commands;
 using MyParkingSpot.Api.Controllers.DTO;
 using MyParkingSpot.Api.Model;
 using MyParkingSpot.Api.Services;
@@ -13,23 +14,23 @@ public class ReservationsController : ControllerBase
     private readonly ParkingSpotReservationService reservationService = new();
 
     [HttpGet]
-    public ActionResult<List<ParkingSpotReservationResultDTO>> Get() {
+    public ActionResult<List<ParkingSpotReservationDTO>> Get() {
 
         List<Reservation> reservations = reservationService.GetAllForCurrentWeek();
-        List<ParkingSpotReservationResultDTO> result= new();
+        List<ParkingSpotReservationDTO> result= new();
 
         foreach (Reservation reservation in reservations)
         {
             ParkingSpot parkingSpot = reservation.ReservableObject as ParkingSpot;
-            ParkingSpotReservationResultDTO resultParkingSpot = new ParkingSpotReservationResultDTO(parkingSpot.Code, reservation.Owner.Id, reservation.Date, reservation.Id);
+            ParkingSpotReservationDTO resultParkingSpot = new ParkingSpotReservationDTO(parkingSpot.Code, reservation.Owner.Id, reservation.Date, reservation.Id);
             result.Add(resultParkingSpot);
         }
 
         return Ok(result);
     }
     
-    [HttpGet("{id}")]
-    public ActionResult<ParkingSpotReservationResultDTO> Get(Guid id)
+    [HttpGet("{id:guid}")]
+    public ActionResult<ParkingSpotReservationDTO> Get(Guid id)
     {
         var reservation = reservationService.Get(id);
         if (reservation is null)
@@ -37,20 +38,18 @@ public class ReservationsController : ControllerBase
             return NotFound();
         }
         ParkingSpot parkingSpot = reservation.ReservableObject as ParkingSpot;
-        ParkingSpotReservationResultDTO result = new ParkingSpotReservationResultDTO(parkingSpot.Code, reservation.Owner.Id, reservation.Date, reservation.Id);
+        ParkingSpotReservationDTO result = new ParkingSpotReservationDTO(parkingSpot.Code, reservation.Owner.Id, reservation.Date, reservation.Id);
 
         return Ok(result);
     }
 
     [HttpPost]
-    public ActionResult Post(ParkingSpotReservationDTO reservationDTO)
+    public ActionResult Post(CreateReservation command)
     {
-        User user = new User(reservationDTO.OwnerID);
-        ParkingSpot parkingSpot = new ParkingSpot(reservationDTO.ParkingSpotCode);
-        Reservation reservation = new Reservation(user, parkingSpot, reservationDTO.DateOfReservation);
         try
         {
-            reservationService.Add(reservation);
+            Guid reservationID = reservationService.Add(command);
+            return CreatedAtAction(nameof(Get), new { id = reservationID }, null);
         }
         catch (ReservationObjectNotExistsException e)
         {
@@ -69,20 +68,17 @@ public class ReservationsController : ControllerBase
             return BadRequest(e.Message);
         }
 
-        return CreatedAtAction(nameof(Get), new { id = reservation.Id }, null);
+        return BadRequest();
     }
 
     [HttpPut("{id:int}")]
-    public ActionResult Put(Guid id, ParkingSpotReservationDTO reservationDTO)
+    public ActionResult Put(ChangeParkingSpot command)
     {
-        User user = new User(reservationDTO.OwnerID);
-        ParkingSpot parkingSpot = new ParkingSpot(reservationDTO.ParkingSpotCode);
-        Reservation reservation = new Reservation(user, parkingSpot, reservationDTO.DateOfReservation);
-        reservation.Id = id;
         try
         {
-            reservationService.Update(reservation);
-        }catch(ReservationObjectNotExistsException e)
+            reservationService.Update(command);
+        }
+        catch(ReservationObjectNotExistsException e)
         {
             return NotFound(e.Message);
         }
@@ -98,7 +94,7 @@ public class ReservationsController : ControllerBase
         return NoContent();
     }
 
-    [HttpDelete("{id:int}")]
+    [HttpDelete("{id:guid}")]
     public ActionResult Delete(Guid id)
     {
         reservationService.Delete(id);

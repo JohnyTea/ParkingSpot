@@ -6,9 +6,9 @@
         public string Name { get; set; }
         public string LicencePlate { get; set; }
 
-        public User(Guid id)
+        public User()
         {
-            Id = id;
+            Id = Guid.NewGuid();
         }
     }
 }

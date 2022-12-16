@@ -1,4 +1,5 @@
-﻿using MyParkingSpot.Api.Model;
+﻿using MyParkingSpot.Api.Controllers.Commands;
+using MyParkingSpot.Api.Model;
 using MyParkingSpot.Api.Services.Exceptions;
 using System.Globalization;
 
@@ -10,9 +11,9 @@ public class ParkingSpotReservationService
     public static List<Reservation> _reservations = new();
     public static List<ParkingSpot> _parkingSpotNames = new()
     {
-        new ParkingSpot(new Guid(), "01"),
-        new ParkingSpot(new Guid(), "02"),
-        new ParkingSpot(new Guid(), "03")
+        new ParkingSpot("01"),
+        new ParkingSpot("02"),
+        new ParkingSpot("03")
     };
 
     public List<Reservation> GetAllForCurrentWeek()
@@ -25,79 +26,69 @@ public class ParkingSpotReservationService
 
     public Reservation Get(Guid id) => _reservations.SingleOrDefault(r => r.Id == id);
 
-    public Guid Add(Reservation reservation)
+    public Guid Add(CreateReservation command)
     {
-        if (reservation.ReservableObject == null)
+        if (command.ParkingSpotCode is null)
         {
             throw new ReservationObjectNotExistsException("Reservation object is null");
         }
 
-        if (reservation.ReservableObject.GetType() != typeof(ParkingSpot)){
-            throw new ArgumentTypeException("You can reserve only parking spots");
+        ParkingSpot parkingSpotToReserve = _parkingSpotNames.SingleOrDefault(p => p.Code == command.ParkingSpotCode);
+
+        if (parkingSpotToReserve is null)
+        {
+            throw new ReservationObjectNotExistsException($"Parking spot with code {command.ParkingSpotCode} dosn't exist");
         }
 
-        if (reservation.Date < DateTime.UtcNow)
+        if (command.DateOfReservation < DateTime.UtcNow)
         {
             throw new ArgumentException("Date can't be from past");
         }
 
-        if (!IsDateInCurrentWeek(reservation.Date))
+        if (!IsDateInCurrentWeek(command.DateOfReservation))
         {
             throw new ArgumentException("Date must be from current week");
         }
 
-        ParkingSpot parkingSpotToReserve = reservation.ReservableObject as ParkingSpot;
-
-        if (_parkingSpotNames.All(p => parkingSpotToReserve.Code != p.Code))
-        {
-            throw new ReservationObjectNotExistsException($"Parking spot with code {parkingSpotToReserve.Code} dosn't exist");
-        }
-
         bool parkingSpotIsAlreadyReserved = _reservations.Any(r => r.ReservableObject.Equals(parkingSpotToReserve) &&
-            r.Date.Date == reservation.Date.Date);
+            r.Date == command.DateOfReservation);
 
         if (parkingSpotIsAlreadyReserved)
         {
             throw new ObjectAlreadyReservedException("This parking spot is already reserved");
         }
 
-        reservation.Id = Guid.NewGuid();
-        _reservations.Add(reservation);
-        return reservation.Id;
+        User user = new User(); // TODO add real users
+        Reservation newReservation = new Reservation(user, parkingSpotToReserve, command.DateOfReservation);
+        
+        _reservations.Add(newReservation);
+        return newReservation.Id;
     }
 
-    public Guid Update(Reservation updatedReservation)
+    public Guid Update(ChangeParkingSpot command)
     {
-        var existingReservation = _reservations.SingleOrDefault(r => r.Id == updatedReservation.Id);
+        var existingReservation = _reservations.SingleOrDefault(r => r.Id == command.ReservationID);
         if (existingReservation is null)
         {
-            throw new ReservationObjectNotExistsException($"Reservation with id {updatedReservation.Id} not found");
+            throw new ReservationObjectNotExistsException($"Reservation with id {command.ReservationID} not found");
         }
 
-        if (updatedReservation.ReservableObject == null)
+        if (command.ParkingSpotCode == null)
         {
             throw new ReservationObjectNotExistsException("Object to reserve is null");
         }
 
-        if (updatedReservation.ReservableObject.GetType() != typeof(ParkingSpot))
-        {
-            throw new ArgumentTypeException("You can reserve only parking spots");
-        }
+        ParkingSpot parkingSpotToReserve = _parkingSpotNames.SingleOrDefault(p => p.Code == command.ParkingSpotCode);
 
-        if (updatedReservation.Date < DateTime.UtcNow)
-        {
-            throw new ArgumentException("Date can't be from past");
-        }
-
-        bool parkingSpotIsAlreadyReserved = _reservations.Any(r => r.ReservableObject.Equals(updatedReservation.ReservableObject) &&
-            r.Date.Date == updatedReservation.Date.Date);
+        bool parkingSpotIsAlreadyReserved = _reservations.Any(r => r.ReservableObject.Equals(parkingSpotToReserve) &&
+            r.Date == existingReservation.Date);
 
         if (parkingSpotIsAlreadyReserved)
         {
             throw new ObjectAlreadyReservedException("This parking spot is already reserved");
         }
 
-        existingReservation.ReservableObject = updatedReservation.ReservableObject;
+        existingReservation.ReservableObject = parkingSpotToReserve;
 
         return existingReservation.Id;
     }
